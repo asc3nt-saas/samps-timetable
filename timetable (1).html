@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#151c28">
+<title>Schoolweek · Samarkand School Timetable</title>
+<meta name="description" content="Your school week at a glance. Explore every lesson and break in the Samarkand Presidential School timetable, for every class.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23151c28'/%3E%3Cpath d='M9 10h14v4H13v3h10v5H9v-4h10v-3H9z' fill='%23cefa68'/%3E%3C/svg%3E">
+<script>
+(function(){let t;try{t=localStorage.getItem('schoolweek-theme')}catch(e){}
+if(t!=='light'&&t!=='dark')t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.dataset.theme=t;})();
+</script>
+<style>
+:root{--ink:#17212d;--muted:#627080;--line:#e0e5e8;--paper:#f5f7f7;--lime:#cefa68;--blue:#3865e6;--radius:18px;--side:292px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 'Inter','Segoe UI',Arial,sans-serif}
+button,select,input{font:inherit}
+button,a,select,input{touch-action:manipulation}
+button{cursor:pointer}
+a{color:inherit}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #3865e6;outline-offset:4px}
+
+.topbar{height:94px;padding:0 3%;display:flex;align-items:center;border-bottom:1px solid var(--line);gap:40px;background:#fff}
+.brand{display:flex;gap:10px;align-items:center;font-weight:800;font-size:25px;letter-spacing:-1px;text-decoration:none}
+.brandmark{background:var(--ink);color:var(--lime);width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:28px}
+.brand-dot{color:#79a52a}
+.school{font-size:14px;line-height:1.5;border-left:1px solid var(--line);padding-left:30px;font-weight:600}
+.school span{display:block;font-weight:400;color:var(--muted)}
+.clock{margin-left:auto;text-align:right;display:flex;flex-direction:column}
+.clock>span:first-child{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:-1px;font-weight:700}
+.clock>span:last-child{font-size:12px;color:var(--muted)}
+
+/* Layout with side menu */
+.layout{display:flex;align-items:flex-start}
+.layout>main{flex:1;min-width:0}
+.sidebar{position:sticky;top:0;width:var(--side);flex-shrink:0;height:100vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-right:1px solid var(--line);padding:22px 16px 20px;display:flex;flex-direction:column;gap:18px;transition:width .3s cubic-bezier(.2,.8,.2,1),padding .3s;scrollbar-width:thin}
+.sidebar>*{flex-shrink:0}
+.side-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;min-height:34px}
+.side-top .eyebrow{margin:0;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.side-toggle{flex-shrink:0;display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);transition:background .15s,transform .3s}
+.side-toggle:hover{background:#17212d08}
+.side-toggle svg{width:17px;height:17px;transition:transform .3s}
+/* Spotlight card */
+.spotlight{background:var(--ink);color:#fff;border-radius:16px;padding:16px 16px 14px;position:relative;overflow:hidden}
+.spotlight:after{content:'';position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#cefa6840,transparent 70%);pointer-events:none}
+.sp-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--lime)}
+.sp-name{display:flex;align-items:center;gap:9px;font-size:26px;font-weight:750;letter-spacing:-1px;line-height:1.2;margin:6px 0 2px}
+.sp-name .dot{width:10px;height:10px}
+.sp-status{display:flex;align-items:center;gap:7px;font-size:13px;color:#c1c9d1;min-height:20px}
+.sp-status b{color:#fff;font-weight:600}
+.sp-progress{height:7px;border-radius:9px;background:#ffffff1c;margin:13px 0 8px;overflow:hidden}
+.sp-progress i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#9fd33a,var(--lime));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.sp-foot{display:flex;justify-content:space-between;font-size:12px;color:#cbd3dc;font-variant-numeric:tabular-nums}
+.sp-foot span:last-child{color:var(--lime);font-weight:650}
+.spotlight.pop{animation:pop .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{0%{transform:scale(.96);opacity:.6}60%{transform:scale(1.015)}100%{transform:none;opacity:1}}
+/* Stream switch */
+.stream-switch{display:flex;padding:4px;border:1px solid #dce2e5;border-radius:11px;background:#edf0f1}
+.stream-switch button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 6px;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,color .15s}
+.stream-switch button.active{background:#fff;color:var(--ink);font-weight:650;box-shadow:0 2px 4px #17212d10}
+/* Class list */
+.grade-group{margin-bottom:14px}
+.grade-label{font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);display:flex;justify-content:space-between;margin:0 4px 7px;white-space:nowrap}
+.grade-label em{font-style:normal;font-weight:500;letter-spacing:.3px}
+.grade-label .g-short{display:none}
+.grade-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stream-blue .class-btn[data-stream=green],.stream-green .class-btn[data-stream=blue]{display:none}
+.stream-blue .grade-row,.stream-green .grade-row{grid-template-columns:1fr}
+.class-btn{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:11px;padding:9px 10px 8px;text-align:left;transition:background .15s,border-color .15s,transform .18s,box-shadow .18s;animation:slidein .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms)}
+@keyframes slidein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.class-btn:hover{border-color:#aab5be;transform:translateY(-2px);box-shadow:0 5px 14px #17212d12}
+.class-btn:active{transform:scale(.97)}
+.cb-top{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:14px;font-weight:650}
+.cb-top small{margin-left:auto;font-size:11px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.cb-code{display:none;font-size:14px;font-weight:750;letter-spacing:-.3px}
+.cb-live{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:17px}
+.cb-live span{overflow:hidden;text-overflow:ellipsis}
+.pulse{width:6px;height:6px;border-radius:50%;background:#79a52a;flex-shrink:0;position:relative}
+.pulse:after{content:'';position:absolute;inset:0;border-radius:50%;background:inherit;animation:ping 1.8s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:.7}to{transform:scale(3);opacity:0}}
+.pulse.idle{background:#b6bfc8}
+.pulse.idle:after{display:none}
+.pulse.brk{background:#e0a33a}
+.class-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 6px 18px #17212d2a}
+.class-btn.active .cb-top small,.class-btn.active .cb-live{color:#cbd3dc}
+.class-btn.active .pulse{background:var(--lime)}
+.class-btn.active .pulse.idle{background:#6e7c8c}
+.class-btn.active:before{content:'';position:absolute;left:-1px;top:9px;bottom:9px;width:3px;border-radius:4px;background:var(--lime)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.blue{background:#3865e6}
+.dot.green{background:#79a52a}
+.class-btn.active .dot.green{background:var(--lime)}
+.class-btn.active .dot.blue{background:#8eaaf7}
+.side-foot{margin-top:auto;padding:14px 4px 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted);white-space:nowrap}
+.side-foot strong{display:block;color:var(--ink);font-size:13px;margin-bottom:2px}
+kbd{font:600 11px/1 'Inter','Segoe UI',Arial,sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 5px;color:var(--ink)}
+/* Collapsed rail (desktop) */
+.layout.collapsed .sidebar{width:84px;padding:22px 12px 20px}
+.layout.collapsed .side-top{justify-content:center;padding:0}
+.layout.collapsed .side-top .eyebrow,.layout.collapsed .spotlight,.layout.collapsed .stream-switch,.layout.collapsed .side-foot,.layout.collapsed .grade-label em,.layout.collapsed .g-long{display:none}
+.layout.collapsed .side-toggle svg{transform:rotate(180deg)}
+.layout.collapsed .grade-label{justify-content:center;margin:0 0 6px}
+.layout.collapsed .grade-label .g-short{display:inline}
+.layout.collapsed .grade-row{grid-template-columns:1fr}
+.layout.collapsed .class-btn{display:flex!important;align-items:center;justify-content:center;padding:9px 4px;min-height:44px}
+.layout.collapsed .cb-top,.layout.collapsed .cb-live{display:none}
+.layout.collapsed .cb-code{display:flex;align-items:center;gap:5px}
+.layout.collapsed .class-btn.active:before{left:-1px}
+.menu-button{display:none;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--ink);font-size:13px;font-weight:650;white-space:nowrap}
+.menu-button svg{width:16px;height:16px;flex-shrink:0}
+.scrim{display:none}
+
+main{max-width:1550px;margin:auto;padding:37px 4% 0}
+.intro{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-bottom:27px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:1.9px;margin:0 0 9px;color:var(--muted)}
+.intro .eyebrow,.side-head .eyebrow{display:flex;align-items:center;gap:7px}
+.eyebrow>span{width:7px;height:7px;background:var(--blue);border-radius:50%}
+h1{font-size:clamp(30px,3.5vw,50px);line-height:1.15;letter-spacing:-2px;margin:0;font-weight:750}
+h1 em{font-style:normal;color:#6e7784}
+.intro-note{margin:12px 0 0;color:var(--muted);font-size:15px}
+.intro-note b{color:var(--ink);font-weight:650}
+.week-stamp{padding-left:25px;border-left:1px solid #ccd2d9;display:flex;flex-direction:column}
+.week-stamp>span{font-size:12px;letter-spacing:2px;font-weight:700}
+.week-stamp strong{font-size:23px;letter-spacing:-1px;margin:5px 0}
+.week-stamp strong span{color:#9da6ae}
+.week-stamp small{font-size:12px;color:var(--muted)}
+
+.overview{display:grid;grid-template-columns:2.2fr 1fr 1fr;gap:16px;margin-bottom:37px}
+.now-card{background:var(--ink);color:white;border-radius:var(--radius);padding:21px 25px;position:relative;overflow:hidden}
+.now-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:1.5px;color:var(--lime);font-weight:650}
+.live-pill{background:#ffffff13;padding:4px 9px;border-radius:20px;font-size:12px;display:flex;gap:6px;align-items:center;color:#fff;letter-spacing:1px}
+.live-pill i{width:5px;height:5px;background:var(--lime);border-radius:50%}
+.now-card h2{font-size:27px;line-height:1.25;letter-spacing:-.6px;margin:15px 0 5px;font-weight:650}
+.now-card>p{margin:0;color:#c1c9d1;font-size:14px}
+.now-bottom{margin-top:18px;padding-top:13px;border-top:1px solid #ffffff24;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#cbd3dc}
+.now-bottom>span:last-child{color:var(--lime);white-space:nowrap}
+.stat{padding:22px 23px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;display:flex;flex-direction:column}
+.stat-label{font-size:12px;font-weight:700;letter-spacing:1.4px;color:var(--muted)}
+.stat strong{font-size:41px;line-height:1.2;letter-spacing:-1.5px;margin-top:10px}
+.stat strong span{font-size:14px;font-weight:400;letter-spacing:0;color:var(--muted);margin-left:9px}
+.stat p{margin:8px 0 0;font-size:12px;color:var(--muted)}
+.mini-bars{display:flex;gap:6px;height:25px;align-items:flex-end;margin-top:10px}
+.mini-bars i{height:25px;background:#dbe8fe;width:18%;border-radius:3px;transition:height .3s}
+.mini-bars i.short{background:#a6c2f6}
+.color-line{display:flex;gap:5px;margin-top:21px;height:14px}
+.color-line i{width:20%;background:#cadcfb;border-radius:3px}
+.color-line i:nth-child(2){background:#d1ebd7}
+.color-line i:nth-child(3){background:#f8d7ce}
+.color-line i:nth-child(4){background:#e1d8f4}
+.color-line i:nth-child(5){background:#f4e4b9}
+
+.schedule-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}
+.schedule-heading h2{font-size:26px;letter-spacing:-.7px;margin:0;display:flex;gap:12px;align-items:center}
+.schedule-heading .eyebrow{font-size:12px;letter-spacing:1.6px;margin-bottom:5px}
+.count-badge{font-size:12px;letter-spacing:0;font-weight:500;border:1px solid var(--line);padding:3px 10px;border-radius:20px;color:var(--muted)}
+.view-switch{padding:4px;display:flex;border:1px solid #dce2e5;border-radius:10px;background:#edf0f1}
+.view-switch button{border:0;background:transparent;padding:8px 15px;border-radius:7px;color:var(--muted);font-size:14px}
+.view-switch button.active{background:#fff;color:var(--ink);font-weight:650;box-shadow:0 2px 4px #17212d10}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.day-picker{display:flex;gap:6px}
+.day-picker button{background:transparent;border:1px solid transparent;padding:7px 11px;font-size:14px;border-radius:8px;color:var(--muted)}
+.day-picker button.selected{background:var(--ink);color:#fff}
+.day-picker button:hover{border-color:#aab5be}
+.day-picker button.is-today:after{content:'';display:inline-block;width:4px;height:4px;background:var(--blue);border-radius:50%;margin-left:5px;vertical-align:middle}
+.day-picker button.selected.is-today:after{background:var(--lime)}
+.filters{display:flex;gap:17px;align-items:center}
+.subject-select{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+select{border:1px solid #d9dfe4;border-radius:8px;padding:8px 26px 8px 11px;background:#fff;color:var(--ink);max-width:225px;font-size:14px}
+.break-toggle{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--muted);white-space:nowrap}
+.break-toggle input{accent-color:var(--ink);width:16px;height:16px}
+.table-shell{padding:7px 12px 15px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.timetable-grid{display:grid;grid-template-columns:93px repeat(5,minmax(0,1fr));gap:7px}
+.time-heading{font-size:12px;letter-spacing:1px;color:var(--muted);padding:18px 2px}
+.day-heading{padding:12px 11px;display:flex;flex-direction:column;gap:3px;border-radius:8px;font-weight:650;font-size:14px}
+.day-heading small{font-size:12px;font-weight:400;color:var(--muted)}
+.day-heading.today{background:#edf4d9}
+.day-heading.today small{color:#526b1d}
+.time-cell{display:flex;flex-direction:column;justify-content:center;padding:7px 2px;font-variant-numeric:tabular-nums}
+.period-label{font-size:12px;color:var(--muted)}
+.time-start{font-size:15px;font-weight:650;line-height:1.4}
+.time-end{font-size:12px;color:var(--muted);line-height:1.4}
+.lesson{border:1px solid var(--edge);border-radius:9px;padding:10px 11px;text-align:left;min-height:86px;width:100%;background:var(--tone);color:var(--ink);position:relative;transition:transform .15s,box-shadow .15s,opacity .15s;display:flex;flex-direction:column;justify-content:space-between;gap:9px;overflow-wrap:anywhere}
+.lesson:before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;background:var(--accent);border-radius:4px}
+.lesson:hover{transform:translateY(-2px);box-shadow:0 4px 12px #17212d13}
+.lesson-name{font-weight:650;font-size:14px;line-height:1.3}
+.lesson-meta{display:flex;justify-content:space-between;gap:5px;font-size:12px;color:var(--subtle);font-weight:500;align-items:center}
+.lesson-meta .code{font-size:12px}
+.lesson.current{outline:2px solid var(--ink);outline-offset:1px}
+.lesson.dimmed{opacity:.23}
+.lesson.empty{border:1px dashed #dde3e7;background:#fafbfc;color:#89939c;justify-content:center;min-height:86px}
+.lesson.empty:hover{transform:none;box-shadow:none}
+.lesson.empty:before{display:none}
+.lesson.empty .lesson-name{font-weight:400;font-size:13px}
+.break-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;align-items:center;padding:1px 2px}
+.break-row{grid-column:span 5;background:#f4f6f7;border-radius:5px;padding:5px 10px;color:#7e8993;font-size:12px;display:flex;align-items:center;gap:8px;min-height:25px}
+.break-row b{font-weight:500;color:#687782}
+.break-row:after{content:'';height:1px;background:#e4e9ed;flex:1}
+.break-row.lunch{background:#f3f6e9;color:#73814d}
+.schedule-caption{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin:11px 3px 0;gap:12px}
+.schedule-caption p{margin:0}
+.accent-square{display:inline-block;width:6px;height:6px;border-radius:2px;background:#8fac53;margin-right:5px}
+.day-list{max-width:800px;margin:0 auto}
+.day-list-header{display:flex;align-items:center;justify-content:space-between;padding:18px 4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.day-list-header h3{font-size:23px;letter-spacing:-.5px;margin:0}
+.day-list-header span{font-size:13px;color:var(--muted)}
+.day-list .day-item{display:grid;grid-template-columns:90px 1fr;gap:12px;margin-bottom:9px}
+.day-list .lesson{min-height:75px}
+.day-list .break-row{grid-column:auto}
+.day-list .lesson-name{font-size:16px}
+.empty-filter{padding:25px 12px;text-align:center;color:var(--muted)}
+footer{display:flex;align-items:center;gap:22px;justify-content:space-between;border-top:1px solid var(--line);margin-top:30px;padding:24px 0;color:var(--muted);font-size:12px}
+footer p{margin:0}
+.footer-brand{font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-.5px}
+dialog{width:min(520px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid var(--line);border-radius:20px;padding:32px;background:#fff;color:var(--ink);box-shadow:0 15px 70px #1117}
+dialog::backdrop{background:#11182790;backdrop-filter:blur(4px)}
+dialog h2{font-size:28px;letter-spacing:-.7px;line-height:1.2;margin:16px 0}
+dialog>p:not(.eyebrow){color:var(--muted);font-size:14px}
+.close-dialog{position:absolute;top:13px;right:17px;border:0;border-radius:8px;background:#f1f3f5;width:32px;height:32px;font-size:25px;color:var(--muted)}
+.dialog-session{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid var(--line);font-size:14px}
+.dialog-session span{color:var(--muted);font-variant-numeric:tabular-nums}
+.dialog-foot{border-top:1px solid var(--line);padding-top:17px;margin-bottom:0}
+.motion-in{animation:appear .35s ease-out}
+@keyframes appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media(min-width:1500px){.lesson{min-height:97px}.lesson-name{font-size:15px}}
+@media(max-width:1180px){
+  .overview{grid-template-columns:1.8fr 1fr 1fr}
+  .stat{padding:20px 16px}
+  .week-stamp{display:none}
+  .toolbar{flex-wrap:wrap}
+  .filters{margin-left:auto}
+  .timetable-grid{grid-template-columns:76px repeat(5,minmax(0,1fr))}
+  .lesson{padding:10px 8px}
+  .day-heading{padding:12px 7px}
+}
+/* Side menu becomes a drawer */
+@media(max-width:920px){
+  .menu-button{display:flex}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:60;width:min(300px,86vw);height:auto;transform:translateX(-102%);transition:transform .25s ease;box-shadow:0 15px 70px #1117}
+  .sidebar.open{transform:none}
+  .layout.collapsed .sidebar{width:min(300px,86vw);padding:22px 16px 20px}
+  .side-hint{display:none}
+  .scrim{display:block;position:fixed;inset:0;z-index:55;background:#11182790;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .topbar{gap:20px}
+  .school{padding-left:20px}
+}
+@media(max-width:760px){
+  .topbar{height:77px;gap:10px;padding:0 4%}
+  .brand{font-size:19px}
+  .brandmark{width:29px;height:29px;font-size:25px}
+  .school{display:none}
+  .clock>span:first-child{font-size:20px}
+  main{padding:24px 4% 0}
+  .intro{margin-bottom:23px}
+  h1{font-size:34px;letter-spacing:-1.5px}
+  h1 em{display:block}
+  .intro-note{font-size:14px}
+  .overview{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:27px}
+  .now-card{grid-column:span 2;padding:20px}
+  .now-card h2{font-size:25px}
+  .now-bottom{flex-wrap:wrap}
+  .stat{padding:16px 18px}
+  .stat strong{font-size:32px}
+  .stat strong span{font-size:12px;margin-left:6px}
+  .mini-bars,.color-line{display:none}
+  .schedule-heading{align-items:flex-end;gap:10px;margin-bottom:15px}
+  .schedule-heading .eyebrow,.view-switch{display:none}
+  .schedule-heading h2{font-size:22px}
+  .toolbar{gap:13px}
+  .day-picker{width:100%;justify-content:space-between;background:#e9edef;padding:4px;border-radius:11px;gap:1px}
+  .day-picker button{flex:1;padding:8px 9px}
+  .filters{margin:0;width:100%;justify-content:space-between;gap:10px}
+  .subject-select>span{display:none}
+  select{max-width:210px}
+  .break-toggle{font-size:13px}
+  .table-shell{padding:4px 12px 10px}
+  .schedule-caption p:last-child{display:none}
+  footer{flex-wrap:wrap;gap:12px;margin-top:25px;padding-top:20px}
+  footer p{order:3;width:100%}
+  .day-list .day-item{grid-template-columns:76px 1fr;gap:9px}
+  .day-list .lesson-name{font-size:15px}
+  .day-list-header h3{font-size:22px}
+  .day-list .lesson{padding:12px}
+  dialog{padding:26px}
+  .dialog-session{flex-wrap:wrap;gap:5px}
+  .theme-button{font-size:12px;padding:8px;gap:5px}
+  .theme-button svg{width:15px;height:15px}
+}
+@media(max-width:420px){
+  .theme-button span{display:none}
+  .clock>span:last-child{font-size:10px}
+  .menu-button{padding:8px 9px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Light and dark themes */
+:root{color-scheme:light}
+.theme-button{display:flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap}
+.theme-button:hover,.menu-button:hover{background:#17212d08}
+.theme-button svg{width:17px;height:17px;flex-shrink:0}
+:root[data-theme="dark"]{color-scheme:dark;--ink:#edf2f7;--muted:#a6b3c2;--line:#33404f;--paper:#111823}
+[data-theme="dark"] .topbar,[data-theme="dark"] .stat,[data-theme="dark"] .table-shell,[data-theme="dark"] dialog,[data-theme="dark"] .sidebar{background:#1a2330}
+[data-theme="dark"] .brandmark,[data-theme="dark"] .now-card{background:#253246;color:#eef4fc}
+[data-theme="dark"] .day-picker button.selected,[data-theme="dark"] .class-btn.active{background:#cefa68;color:#182126;border-color:#cefa68}
+[data-theme="dark"] .class-btn.active .cb-top small,[data-theme="dark"] .class-btn.active .cb-live{color:#4b5c25}
+[data-theme="dark"] .class-btn.active .pulse{background:#4f7a12}
+[data-theme="dark"] .class-btn.active:before{background:#182126}
+[data-theme="dark"] .spotlight{background:#253246;border:1px solid #3a4b61}
+[data-theme="dark"] .stream-switch{background:#202c3b;border-color:var(--line)}
+[data-theme="dark"] .stream-switch button.active{background:#394a5e;color:#fff}
+[data-theme="dark"] .side-toggle:hover{background:#ffffff0b}
+[data-theme="dark"] .class-btn:hover{box-shadow:0 5px 14px #0006}
+[data-theme="dark"] .class-btn.active .dot.green{background:#4f7a12}
+[data-theme="dark"] .class-btn.active .dot.blue{background:#3865e6}
+[data-theme="dark"] .now-card{border:1px solid #3a4b61}
+[data-theme="dark"] h1 em{color:#a6b3c2}
+[data-theme="dark"] .week-stamp{border-color:var(--line)}
+[data-theme="dark"] .view-switch,[data-theme="dark"] .day-picker{background:#202c3b;border-color:var(--line)}
+[data-theme="dark"] .view-switch button.active{background:#394a5e;color:#fff}
+[data-theme="dark"] select{background:#1a2330;border-color:var(--line);color:var(--ink)}
+[data-theme="dark"] .day-heading.today{background:#cefa681a}
+[data-theme="dark"] .day-heading.today small{color:#c3dc8d}
+[data-theme="dark"] .lesson{background:color-mix(in srgb,var(--tone) 12%,#192432);border-color:color-mix(in srgb,var(--edge) 25%,#192432);color:#edf2f7}
+[data-theme="dark"] .lesson-meta{color:color-mix(in srgb,var(--tone) 75%,#aab9cb)}
+[data-theme="dark"] .lesson.empty{background:#17212d;border-color:#3b4758;color:#9aa8b9}
+[data-theme="dark"] .lesson.current{outline-color:#cefa68}
+[data-theme="dark"] .break-row{background:#222d3b;color:#afbdcd}
+[data-theme="dark"] .break-row b{color:#b8c4d1}
+[data-theme="dark"] .break-row:after{background:#3a4756}
+[data-theme="dark"] .break-row.lunch{background:#cefa6812;color:#c5d69b}
+[data-theme="dark"] .break-row.lunch b{color:#c5d69b}
+[data-theme="dark"] .close-dialog{background:#303e50;color:#d4ddea}
+[data-theme="dark"] .theme-button:hover,[data-theme="dark"] .menu-button:hover{background:#ffffff0b}
+[data-theme="dark"] .mini-bars i,[data-theme="dark"] .color-line i{opacity:.7}
+[data-theme="dark"] .break-toggle input{accent-color:#cefa68}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a href="./" class="brand" aria-label="Schoolweek home"><span class="brandmark">s.</span><span>schoolweek<span class="brand-dot">.</span></span></a>
+  <span class="school" id="school-label">Presidential School <span>Samarkand, Uzbekistan</span></span>
+  <button id="theme-toggle" class="theme-button" type="button" aria-label="Switch color theme"></button>
+  <button id="menu-button" class="menu-button" type="button" aria-controls="sidebar" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    <span id="menu-label">Class</span>
+  </button>
+  <div class="clock"><span id="clock">--:--</span><span id="date">Tashkent time · UTC+5</span></div>
+</header>
+
+<div class="layout" id="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Choose a classroom">
+    <div class="side-top">
+      <p class="eyebrow"><span></span>CLASSROOMS</p>
+      <button class="side-toggle" id="side-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide class menu" title="Hide menu ( [ )"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    </div>
+    <div class="spotlight" id="spotlight" aria-live="polite">
+      <span class="sp-label">YOU'RE VIEWING</span>
+      <div class="sp-name" id="sp-name"></div>
+      <div class="sp-status" id="sp-status"></div>
+      <div class="sp-progress"><i id="sp-bar"></i></div>
+      <div class="sp-foot"><span id="sp-done"></span><span id="sp-pct"></span></div>
+    </div>
+    <div class="stream-switch" id="stream-switch" role="group" aria-label="Show stream">
+      <button data-stream="all" class="active">All</button>
+      <button data-stream="blue"><i class="dot blue"></i>Blue</button>
+      <button data-stream="green"><i class="dot green"></i>Green</button>
+    </div>
+    <nav id="class-nav"></nav>
+    <div class="side-foot"><strong>SAMPS timetable</strong><span class="side-hint">Press <kbd>[</kbd> to hide this menu</span></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main>
+    <section class="intro">
+      <div>
+        <p class="eyebrow" id="class-eyebrow"><span></span>THE SCHOOL TIMETABLE</p>
+        <h1>Your week, <em>at a glance.</em></h1>
+        <p class="intro-note" id="intro-note">Every subject. Every break. One clear view.</p>
+      </div>
+      <div class="week-stamp">
+        <span>MON — FRI</span>
+        <strong>08:30 <span>—</span> <b id="day-end" style="font-weight:inherit">15:35</b></strong>
+        <small>Regular school-week schedule</small>
+      </div>
+    </section>
+
+    <section class="overview" aria-label="Schedule overview">
+      <div class="now-card">
+        <div class="now-head"><span id="status-label">AFTER SCHOOL</span><span class="live-pill"><i></i>LIVE</span></div>
+        <h2 id="now-title">Your day is complete.</h2>
+        <p id="now-info">Loading the current schedule…</p>
+        <div class="now-bottom"><span id="next-info"></span><span id="countdown"></span></div>
+      </div>
+      <div class="stat">
+        <span class="stat-label">WEEKLY LESSONS</span>
+        <strong><b id="stat-lessons" style="font-weight:inherit">0</b><span>periods</span></strong>
+        <div class="mini-bars" id="mini-bars" aria-hidden="true"></div>
+        <p id="stat-lessons-note"></p>
+      </div>
+      <div class="stat">
+        <span class="stat-label">ON YOUR TIMETABLE</span>
+        <strong><b id="stat-subjects" style="font-weight:inherit">0</b><span>subjects</span></strong>
+        <div class="color-line" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <p>Sciences, languages &amp; more</p>
+      </div>
+    </section>
+
+    <section class="schedule-section">
+      <div class="schedule-heading">
+        <div>
+          <p class="eyebrow">MAKE SPACE FOR WHAT'S NEXT</p>
+          <h2>Your timetable<span class="count-badge" id="count-badge">5 days</span></h2>
+        </div>
+        <div class="view-switch" role="group" aria-label="Timetable view">
+          <button id="week-button" class="active" aria-pressed="true">Week view</button>
+          <button id="day-button" aria-pressed="false">Day view</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="day-picker" id="day-picker" role="group" aria-label="Choose a school day"></div>
+        <div class="filters">
+          <label class="subject-select"><span>Subject</span>
+            <select id="subject-filter" aria-label="Filter by subject"><option value="all">All subjects</option></select>
+          </label>
+          <label class="break-toggle"><input type="checkbox" id="show-breaks" checked><span>Show breaks</span></label>
+        </div>
+      </div>
+      <div class="table-shell"><div id="timetable" aria-label="School timetable"></div></div>
+      <div class="schedule-caption">
+        <p><span class="accent-square"></span>Click a lesson to see its weekly schedule.</p>
+        <p id="visible-count"></p>
+      </div>
+    </section>
+
+    <footer>
+      <span class="footer-brand">schoolweek.</span>
+      <p>Based on the SAMPS class timetables · Times in Uzbekistan (UTC+5)</p>
+      <span>Generated 06/10/2025</span>
+    </footer>
+  </main>
+</div>
+
+<dialog id="lesson-dialog">
+  <form method="dialog"><button class="close-dialog" aria-label="Close lesson details">×</button></form>
+  <p class="eyebrow" id="dialog-eyebrow">SUBJECT SCHEDULE</p>
+  <h2 id="dialog-title"></h2>
+  <p id="dialog-summary"></p>
+  <div id="dialog-lessons"></div>
+  <p class="dialog-foot">All lesson times follow the SAMPS school timetable.</p>
+</dialog>
+
+<script>
+'use strict';
+const days=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const subjects={
+  fs:{name:'Future Studies',short:'Future Studies',code:'FS',category:'Personal development',color:'personal'},
+  gs:{name:'General Science',short:'General Science',code:'SC',category:'Science',color:'biology'},
+  bio:{name:'Biology',short:'Biology',code:'BI',category:'Science',color:'biology'},
+  che:{name:'Chemistry',short:'Chemistry',code:'CH',category:'Science',color:'chemistry'},
+  phy:{name:'Physics',short:'Physics',code:'PH',category:'Science',color:'physics'},
+  mls:{name:'Maths LS',short:'Maths',code:'MA',category:'Lower Secondary',color:'maths'},
+  mig:{name:'Maths IGCSE',short:'Maths',code:'MA',category:'IGCSE',color:'maths'},
+  mas:{name:'Maths AS/A',short:'Maths AS/A',code:'MA',category:'A Level',color:'maths'},
+  els:{name:'English Lower Secondary',short:'English',code:'EN',category:'Lower Secondary',color:'language'},
+  eig:{name:'English IGCSE',short:'English',code:'EN',category:'IGCSE',color:'language'},
+  eas:{name:'English A/AS',short:'English A/AS',code:'EN',category:'A Level',color:'language'},
+  uz:{name:'Uzbek Language & Literature',short:'Uzbek Language & Literature',code:'UZ',category:'Languages',color:'language'},
+  ru:{name:'Russian',short:'Russian',code:'RU',category:'Languages',color:'language'},
+  csl:{name:'Computer Science LS',short:'Computer Science',code:'CS',category:'Lower Secondary',color:'computing'},
+  csu:{name:'Computer Science US',short:'Computer Science',code:'CS',category:'Upper Secondary',color:'computing'},
+  hi:{name:'History',short:'History',code:'HI',category:'Humanities',color:'humanities'},
+  geo:{name:'Geography',short:'Geography',code:'GE',category:'Humanities',color:'humanities'},
+  gp:{name:'Global Perspectives',short:'Global Perspectives',code:'GP',category:'Humanities',color:'personal'},
+  ce:{name:'Character Education',short:'Character Education',code:'CE',category:'Personal development',color:'personal'},
+  pe:{name:'Physical Education',short:'Physical Education',code:'PE',category:'Sport & wellbeing',color:'sport'},
+  pmt:{name:'Pre-Military Training',short:'Pre-Military Training',code:'PM',category:'Sport & wellbeing',color:'sport'},
+  art:{name:'Art',short:'Art',code:'AR',category:'Arts',color:'arts'},
+  mu:{name:'Music',short:'Music',code:'MU',category:'Arts',color:'arts'},
+  b10a:{name:'10 Ac/Che/Phy/CS',short:'Ac / Che / Phy / CS',code:'EL',category:'Elective block',color:'elective'},
+  b10b:{name:'10 Phy/Bio/CS/Eco',short:'Phy / Bio / CS / Eco',code:'EL',category:'Elective block',color:'elective'},
+  b11a:{name:'11 Eco/Che/Phy',short:'Eco / Che / Phy',code:'EL',category:'Elective block',color:'elective'},
+  b11b:{name:'11 Bio/CS/Phy',short:'Bio / CS / Phy',code:'EL',category:'Elective block',color:'elective'},
+  ph:{name:'Principal’s Hour',short:'Principal’s Hour',code:'PH',category:'Whole school',color:'personal'}
+};
+const palettes={
+  maths:['#eaf0ff','#d8e3fe','#6388ed','#5670ab'],
+  language:['#f2edfb','#e6def3','#9981c1','#786199'],
+  biology:['#eaf5ec','#d6e8da','#72a380','#587962'],
+  chemistry:['#fcf0e7','#f1dfd1','#d59d73','#9b7353'],
+  physics:['#e8f3f9','#d3e5f0','#6c9dbb','#587c95'],
+  computing:['#e8f3f2','#d3e7e5','#5b9e98','#517e79'],
+  humanities:['#f8f3e6','#e9dfc6','#bfa064','#8c784d'],
+  sport:['#f0f5e2','#e0e8c9','#9aa860','#748346'],
+  personal:['#fcecee','#f1d9df','#c7899c','#9c6475'],
+  arts:['#fdf0f6','#f3dbe8','#c97aa3','#9a5a7b'],
+  elective:['#eef0f4','#dde1e8','#7d8796','#5d6674']
+};
+// Rows = Monday..Friday, entries = periods in order (null = blank in source)
+const classes={
+  '5B':[['fs','gs','mls','els','uz','csl','hi'],['uz','mls','ce','els','gs','hi'],['art','art','mu','ru','mls','els'],['uz','uz','gs','pe','pe','ru'],['csl','mls','mls','uz','gp','els']],
+  '5G':[['fs','els','uz','mls','mls','ru','csl'],['gs','hi','uz','uz','ce','csl'],['mls','mu','art','art','gs','uz'],['ru','pe','pe','els','mls','gp'],['els','els','gs','hi','mls','uz']],
+  '6B':[['fs','mls','gp','ce','els','els','uz'],['uz','ru','mls','mls','gp','gs','csl'],['mu','hi','gs','uz','art','art'],['mls','els','ru','gs','gs','uz','uz'],['mls','pe','pe','els','hi','csl']],
+  '6G':[['fs','ru','els','uz','gp','hi','csl'],['mls','pe','pe','gs','uz','uz','hi'],['gs','gs','els','mls','gp','uz'],['els','uz','mls','mls','csl','gs','ce'],['art','art','mu','mls','els','ru']],
+  '7B':[['fs','pe','pe','gs','gs','geo','uz','uz'],['gp','gs','csl','hi','els','mig','csl'],['gp','geo','mig','els','uz','ru','ce'],['gs','mls','els','hi','els','uz','ru'],['mu','hi','art','art','uz','mls','mls']],
+  '7G':[['fs','geo','gs','gp','hi','uz','mls','ru'],['ce','uz','gs','csl','mls','gp','eig'],['geo','mls','uz','eig','ru','pe','pe'],['csl','gs','uz','eig','hi','mls','mls'],['uz','gs','eig','mu','art','art','hi']],
+  '8B':[['fs','bio','csl','geo','phy','phy','pe','pe'],['mig','mig','eig','eig','hi','phy','bio'],['ru','csl','mig','geo','hi','che','che'],['eig','eig','uz','che','gp','hi','csl'],['bio','mig','mig','ce','ru','uz','uz']],
+  '8G':[['fs','uz','geo','eig','ru','mig','mig','ce'],['hi','eig','mig','pe','pe','bio','phy'],['hi','che','geo','bio','uz','phy','phy'],['mig','bio','csl','csl','che','eig','hi'],['mig','eig','csl','gp','uz','che','ru']],
+  '9B':[['fs','eig','bio','bio','mig','uz','hi','csu'],['eig','che','uz','ru','hi','phy','gp'],['mig','mig','uz','csu','ce','gp','eig'],['bio','mig','mig','ru','csu','pe','pe'],['che','che','hi','mig','csu','phy','phy']],
+  '9G':[['fs','mig','mig','csu','bio','bio','che','phy'],['ru','hi','hi','ce','eig','eig','phy'],['che','pe','pe','mig','mig','phy','uz'],['hi','csu','gp','uz','ru','mig','eig'],['gp','bio','uz','che','mig','csu','csu']],
+  '10B':[['fs','uz','hi','ru','b10a','b10a','gp','csu'],['b10b','b10b','pmt','pmt','mas','mas','eas','eas'],['b10b','b10b','mas','mas','hi','eas','uz','ph'],['b10a','b10a','ce','uz','hi','b10a','b10a'],['mas','mas','ru','b10b','b10b','pe','eas']],
+  '10G':[['fs','mas','mas','uz','b10a','b10a','eas','eas'],['b10b','b10b','mas','mas','uz','pmt','pmt','hi'],['b10b','b10b','ru','uz','eas','hi','ce','ph'],['b10a','b10a','hi','gp','eas','b10a','b10a'],['pe','ru','csu','b10b','b10b','mas','mas']],
+  '11B':[['fs','b11a','b11a','b11a','mas','mas','ru','gp'],['pmt','pmt','b11b','b11b','b11b','hi','hi','uz'],['hi','ru','b11a','b11a','b11a','mas','mas','ph'],['eas','eas','b11b','b11b','b11b','mas','mas'],['csu','uz','ce','uz','pe','eas']],
+  '11G':[['fs','b11a','b11a','b11a','uz','pmt','pmt','uz'],['mas','mas','b11b','b11b','b11b','ru','uz','pe'],['mas','mas','b11a','b11a','b11a','ce','ru','ph'],['mas','mas','b11b','b11b','b11b','hi','gp'],['csu','hi','eas','eas','eas','hi']]
+};
+Object.keys(classes).forEach(id=>{
+  const grade=parseInt(id,10), n=grade<=6?7:8, rows=classes[id];
+  rows.forEach(r=>{while(r.length<n)r.push(null)});
+  classes[id]={id,grade,stream:id.endsWith('B')?'Blue':'Green',name:grade+' '+(id.endsWith('B')?'Blue':'Green'),periods:n,schedule:rows};
+});
+const periods=[['08:30','09:15'],['09:20','10:05'],['10:10','10:55'],['11:25','12:10'],['12:15','13:00'],['14:00','14:45'],['14:50','15:35'],['16:00','16:45']];
+const breaks=[['09:15','09:20','Short break'],['10:05','10:10','Short break'],['10:55','11:25','Snack break'],['12:10','12:15','Short break'],['13:00','14:00','Lunch break'],['14:45','14:50','Short break'],['15:35','16:00','Snack break']];
+const min=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
+const $=s=>document.querySelector(s);
+const mobile=window.matchMedia('(max-width: 760px)');
+const drawerQuery=window.matchMedia('(max-width: 920px)');
+
+function localNow(date=new Date()){
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tashkent',weekday:'long',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date).map(x=>[x.type,x.value]));
+  return {...p,dayIndex:days.indexOf(p.weekday),minutes:Number(p.hour)*60+Number(p.minute)};
+}
+function initialClass(){
+  const h=decodeURIComponent(location.hash.slice(1)).toUpperCase();
+  if(classes[h])return h;
+  try{const s=localStorage.getItem('schoolweek-class');if(classes[s])return s;}catch(e){}
+  return '5B';
+}
+let now=localNow();
+let classId=initialClass();
+let selectedDay=now.dayIndex>=0?now.dayIndex:0;
+let view=mobile.matches?'day':'week';
+let filter='all';
+
+const cls=()=>classes[classId];
+const sched=()=>cls().schedule;
+const nP=()=>cls().periods;
+const dayCount=(d,c=cls())=>c.schedule[d].filter(Boolean).length;
+const totalCount=(c=cls())=>c.schedule.reduce((n,r)=>n+r.filter(Boolean).length,0);
+const lastPeriod=d=>{const r=sched()[d];for(let i=r.length-1;i>=0;i--)if(r[i])return i;return -1};
+const sessionCount=k=>sched().reduce((n,d)=>n+d.filter(x=>x===k).length,0);
+const classSubjects=()=>[...new Set(sched().flat().filter(Boolean))];
+
+/* Side menu */
+let collapsed=false,stream='all';
+try{collapsed=localStorage.getItem('schoolweek-side')==='collapsed';const st=localStorage.getItem('schoolweek-stream');if(['all','blue','green'].includes(st))stream=st}catch(e){}
+function buildNav(){
+  const grades=[...new Set(Object.values(classes).map(c=>c.grade))];let i=0;
+  $('#class-nav').innerHTML=grades.map(g=>{
+    const list=Object.values(classes).filter(c=>c.grade===g);
+    return `<div class="grade-group"><span class="grade-label"><span class="g-long">GRADE ${g}</span><span class="g-short">${g}</span><em>${list[0].periods} periods</em></span><div class="grade-row">${list.map(c=>`<button class="class-btn" style="--i:${i++}" data-class="${c.id}" data-stream="${c.stream.toLowerCase()}" title="${c.name}" aria-label="${c.name}, ${totalCount(c)} lessons a week"><span class="cb-top"><i class="dot ${c.stream.toLowerCase()}"></i><span>${c.name}</span><small>${totalCount(c)}</small></span><span class="cb-live" data-live="${c.id}"></span><span class="cb-code"><i class="dot ${c.stream.toLowerCase()}"></i>${c.id}</span></button>`).join('')}</div></div>`;
+  }).join('');
+}
+function replayNav(){document.querySelectorAll('.class-btn').forEach(b=>{b.style.animation='none';b.offsetWidth;b.style.animation=''})}
+function setDrawer(open){
+  if(!drawerQuery.matches)open=false;
+  const was=$('#sidebar').classList.contains('open');
+  $('#sidebar').classList.toggle('open',open);
+  $('#scrim').classList.toggle('show',open);
+  $('#menu-button').setAttribute('aria-expanded',String(open));
+  if(open&&!was)replayNav();
+}
+function setCollapsed(c){
+  collapsed=c;
+  $('#layout').classList.toggle('collapsed',c);
+  const t=$('#side-toggle');
+  t.setAttribute('aria-expanded',String(!c));
+  t.setAttribute('aria-label',c?'Show class menu':'Hide class menu');
+  t.title=c?'Show menu ( [ )':'Hide menu ( [ )';
+  try{localStorage.setItem('schoolweek-side',c?'collapsed':'open')}catch(e){}
+  if(!c)replayNav();
+}
+function toggleSide(){drawerQuery.matches?setDrawer(!$('#sidebar').classList.contains('open')):setCollapsed(!collapsed)}
+function setStream(v){
+  stream=v;
+  const nav=$('#class-nav');nav.classList.remove('stream-blue','stream-green');
+  if(v!=='all')nav.classList.add('stream-'+v);
+  document.querySelectorAll('#stream-switch button').forEach(b=>b.classList.toggle('active',b.dataset.stream===v));
+  try{localStorage.setItem('schoolweek-stream',v)}catch(e){}
+  replayNav();
+}
+/* What a class is doing right now */
+function classStatus(c){
+  const d=now.dayIndex,m=now.minutes;
+  if(d<0)return {kind:'idle',text:'Weekend · back Mon'};
+  const row=c.schedule[d];let last=-1;row.forEach((k,i)=>{if(k)last=i});
+  for(let p=0;p<=last;p++){
+    if(m>=min(periods[p][0])&&m<min(periods[p][1])){
+      const k=row[p];return k?{kind:'live',text:subjects[k].short,subject:k,p}:{kind:'idle',text:'Free period'};
+    }
+    if(p<last&&m>=min(breaks[p][0])&&m<min(breaks[p][1]))return {kind:'brk',text:breaks[p][2]};
+  }
+  if(m<min(periods[0][0]))return {kind:'idle',text:'Starts 08:30'};
+  return {kind:'idle',text:'Done for today'};
+}
+function todayProgress(c){
+  const d=now.dayIndex;if(d<0)return {done:0,total:0};
+  const row=c.schedule[d];let done=0,total=0;
+  row.forEach((k,p)=>{if(!k)return;total++;if(now.minutes>=min(periods[p][1]))done++;});
+  return {done,total};
+}
+function updateSideLive(){
+  Object.values(classes).forEach(c=>{
+    const el=document.querySelector(`[data-live="${c.id}"]`);if(!el)return;
+    const st=classStatus(c);
+    el.innerHTML=`<i class="pulse ${st.kind==='live'?'':st.kind==='brk'?'brk':'idle'}"></i><span>${st.text}</span>`;
+    el.parentElement.title=c.name+' · '+st.text;
+  });
+  const c=cls(),st=classStatus(c),pr=todayProgress(c);
+  $('#sp-name').innerHTML=`<i class="dot ${c.stream.toLowerCase()}"></i>${c.name}`;
+  const lead=st.kind==='live'?'In class':st.kind==='brk'?'On a break':'';
+  $('#sp-status').innerHTML=`<i class="pulse ${st.kind==='live'?'':st.kind==='brk'?'brk':'idle'}"></i>${lead?lead+' · <b>'+st.text+'</b>':st.text}`;
+  const pct=pr.total?Math.round(100*pr.done/pr.total):0;
+  $('#sp-bar').style.width=pct+'%';
+  $('#sp-done').textContent=pr.total?pr.done+' of '+pr.total+' lessons done today':'No lessons today';
+  $('#sp-pct').textContent=pr.total?pct+'%':'—';
+}
+function buildFilter(){
+  const sel=$('#subject-filter');
+  sel.innerHTML='<option value="all">All subjects</option>';
+  classSubjects().map(k=>[k,subjects[k]]).sort((a,b)=>a[1].name.localeCompare(b[1].name)).forEach(([k,s])=>{
+    const o=document.createElement('option');o.value=k;o.textContent=s.name;sel.append(o);
+  });
+  sel.value=filter;
+}
+function updateClassInfo(){
+  const c=cls(), counts=days.map((_,d)=>dayCount(d)), total=totalCount(), maxC=Math.max(...counts);
+  document.querySelectorAll('.class-btn').forEach(b=>{const on=b.dataset.class===classId;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')});
+  $('#class-eyebrow').innerHTML='<span></span>THE SCHOOL TIMETABLE · '+c.name.toUpperCase();
+  $('#intro-note').innerHTML='<b>Class '+c.name+'.</b> Every subject. Every break. One clear view.';
+  $('#school-label').innerHTML='Presidential School <span>Class '+c.name+' · Samarkand</span>';
+  $('#menu-label').textContent=c.name;
+  $('#count-badge').textContent=c.name;
+  const ends=days.map((_,d)=>lastPeriod(d)).filter(i=>i>=0);
+  $('#day-end').textContent=periods[Math.max(...ends)][1];
+  $('#stat-lessons').textContent=total;
+  $('#stat-lessons-note').textContent='Mon–Fri: '+counts.join(' · ')+' a day';
+  $('#mini-bars').innerHTML=counts.map(n=>`<i class="${n<maxC?'short':''}" style="height:${Math.max(4,Math.round(25*n/maxC))}px"></i>`).join('');
+  $('#stat-subjects').textContent=classSubjects().length;
+  document.title='Schoolweek · '+c.name+' · Samarkand School Timetable';
+}
+function selectClass(id){
+  if(!classes[id])return;
+  classId=id;filter='all';
+  try{localStorage.setItem('schoolweek-class',id)}catch(e){}
+  try{history.replaceState(null,'','#'+id)}catch(e){}
+  buildFilter();updateClassInfo();setDrawer(false);render();
+  const sp=$('#spotlight');sp.classList.remove('pop');sp.offsetWidth;sp.classList.add('pop');
+}
+
+/* Timetable */
+function isCurrent(d,p){return now.dayIndex===d&&now.minutes>=min(periods[p][0])&&now.minutes<min(periods[p][1])}
+function lessonMarkup(k,d,p){
+  if(!k){
+    const over=p>lastPeriod(d);
+    return `<div class="lesson empty"><span class="lesson-name">${over?'School day over':'No lesson listed'}</span><span class="lesson-meta">${over?'Lessons finished':'Blank in timetable'}</span></div>`;
+  }
+  const s=subjects[k],pal=palettes[s.color];
+  return `<button class="lesson${filter!=='all'&&filter!==k?' dimmed':''}${isCurrent(d,p)?' current':''}" data-subject="${k}" style="--tone:${pal[0]};--edge:${pal[1]};--accent:${pal[2]};--subtle:${pal[3]}" aria-label="${days[d]}, period ${p+1}: ${s.name}, ${periods[p][0]} to ${periods[p][1]}"><span class="lesson-name">${s.short}</span><span class="lesson-meta"><span>${s.category}</span><span class="code">${isCurrent(d,p)?'NOW':s.code}</span></span></button>`;
+}
+function timeMarkup(p){return `<div class="time-cell"><span class="period-label">PERIOD ${p+1}</span><span class="time-start">${periods[p][0]}</span><span class="time-end">${periods[p][1]}</span></div>`}
+function breakMarkup(p){const b=breaks[p];return `<div class="break-time">${b[0]}<br>${b[1]}</div><div class="break-row${p===4?' lunch':''}"><b>${b[2]}</b><span>${min(b[1])-min(b[0])} min</span></div>`}
+
+function render(){
+  now=localNow();
+  const P=nP(),S=sched(),showBreaks=$('#show-breaks').checked;
+  $('#week-button').classList.toggle('active',view==='week');
+  $('#day-button').classList.toggle('active',view==='day');
+  $('#week-button').setAttribute('aria-pressed',String(view==='week'));
+  $('#day-button').setAttribute('aria-pressed',String(view==='day'));
+  $('#day-picker').innerHTML=days.map((d,i)=>`<button data-day="${i}" class="${i===selectedDay&&view==='day'?'selected ':''}${i===now.dayIndex?'is-today':''}" aria-pressed="${i===selectedDay&&view==='day'}" aria-label="View ${d}">${d.slice(0,3)}</button>`).join('');
+  let html='';
+  if(view==='week'){
+    html='<div class="timetable-grid motion-in"><div class="time-heading">TIME / DAY</div>'+days.map((d,i)=>`<div class="day-heading ${i===now.dayIndex?'today':''}"><span>${d}</span><small>${i===now.dayIndex?'Today · ':''}${dayCount(i)} lessons</small></div>`).join('');
+    for(let p=0;p<P;p++){
+      html+=timeMarkup(p)+days.map((_,d)=>lessonMarkup(S[d][p],d,p)).join('');
+      if(p<P-1&&showBreaks)html+=breakMarkup(p);
+    }
+    html+='</div>';
+  }else{
+    const count=S[selectedDay].filter(k=>k&&(filter==='all'||k===filter)).length,last=lastPeriod(selectedDay);
+    html=`<div class="day-list motion-in"><div class="day-list-header"><h3>${days[selectedDay]}</h3><span>${cls().name} · ${count} lesson${count===1?'':'s'}${now.dayIndex===selectedDay?' · Today':''}</span></div>`;
+    for(let p=0;p<=last;p++){
+      const k=S[selectedDay][p];
+      if(filter==='all'||k===filter)html+=`<div class="day-item">${timeMarkup(p)}${lessonMarkup(k,selectedDay,p)}</div>`;
+      if(p<last&&showBreaks&&filter==='all')html+=`<div class="day-item">${breakMarkup(p)}</div>`;
+    }
+    if(count===0&&filter!=='all')html+='<p class="empty-filter">No '+subjects[filter].name+' lessons on '+days[selectedDay]+'. Choose another day or all subjects.</p>';
+    html+='</div>';
+  }
+  $('#timetable').innerHTML=html;
+  $('#visible-count').textContent=filter==='all'?totalCount()+' lessons this week · '+cls().name:sessionCount(filter)+' '+subjects[filter].name+' lessons this week';
+  updateLive();
+}
+function nextLesson(){
+  const S=sched(),P=nP();
+  const day=now.dayIndex<0?(now.weekday==='Saturday'?5:6):now.dayIndex;
+  for(let offset=0;offset<8;offset++){
+    const d=(day+offset)%7;
+    if(d>4)continue;
+    for(let p=0;p<P;p++){
+      const k=S[d][p];
+      if(k&&(offset>0||min(periods[p][0])>now.minutes))return {d,p,k,offset};
+    }
+  }
+}
+function updateLive(){
+  now=localNow();
+  $('#clock').textContent=now.hour+':'+now.minute;
+  $('#date').textContent=now.day+' '+now.month+' · Tashkent';
+  const d=now.dayIndex,S=sched(),last=d>=0?lastPeriod(d):-1;
+  const p=d>=0?periods.slice(0,last+1).findIndex(t=>now.minutes>=min(t[0])&&now.minutes<min(t[1])):-1;
+  const current=p>=0?S[d][p]:null;
+  const b=d>=0?breaks.slice(0,Math.max(0,last)).find(t=>now.minutes>=min(t[0])&&now.minutes<min(t[1])):null;
+  const next=nextLesson();
+  let label,title,info,count='';
+  if(current){
+    label='IN CLASS · PERIOD '+(p+1);title=subjects[current].name;
+    info=cls().name+' · '+days[d]+' · '+periods[p][0]+'–'+periods[p][1];
+    count=(min(periods[p][1])-now.minutes)+' min left';
+  }else if(b){
+    label='TAKE A BREATHER';title=b[2];
+    info=b[0]+'–'+b[1]+' · '+(min(b[1])-now.minutes)+' minutes remaining';count='Enjoy your break';
+  }else if(d<0){
+    label='THE WEEKEND';title='A little room to recharge.';info=cls().name+' · Your timetable resumes on Monday.';
+  }else if(now.minutes<min(periods[0][0])){
+    label='BEFORE SCHOOL';title='A new day is ahead.';info=cls().name+' · '+days[d]+' · School begins at 08:30';
+  }else if(p>=0&&!current){
+    label='NO LESSON LISTED';title='This period is blank.';info=periods[p][0]+'–'+periods[p][1]+' · Check with school for any other activities.';
+  }else{
+    label='AFTER SCHOOL';title='Your lessons are complete.';info=cls().name+' · '+days[d]+' · All lessons for today have finished.';
+  }
+  $('#status-label').textContent=label;
+  $('#now-title').textContent=title;
+  $('#now-info').textContent=info;
+  $('#next-info').textContent=next?'Next: '+subjects[next.k].short+' · '+(next.offset===0?'':days[next.d]+' ')+periods[next.p][0]:'';
+  if(!count&&next&&next.offset===0)count='In '+(min(periods[next.p][0])-now.minutes)+' min';
+  $('#countdown').textContent=count;
+  updateSideLive();
+}
+function openSubject(k){
+  const s=subjects[k];if(!s)return;
+  $('#dialog-eyebrow').textContent='SUBJECT SCHEDULE · '+cls().name.toUpperCase();
+  $('#dialog-title').textContent=s.name;
+  const n=sessionCount(k);
+  $('#dialog-summary').textContent=n+' lesson'+(n===1?'':'s')+' per week · '+n*45+' minutes of class time';
+  $('#dialog-lessons').innerHTML=sched().flatMap((row,d)=>row.flatMap((key,p)=>key===k?[`<div class="dialog-session"><strong>${days[d]} · Period ${p+1}</strong><span>${periods[p][0]}–${periods[p][1]}</span></div>`]:[])).join('');
+  $('#lesson-dialog').showModal();
+}
+
+/* Events */
+$('#class-nav').addEventListener('click',e=>{const b=e.target.closest('[data-class]');if(b)selectClass(b.dataset.class)});
+$('#menu-button').addEventListener('click',()=>setDrawer(!$('#sidebar').classList.contains('open')));
+$('#side-toggle').addEventListener('click',()=>drawerQuery.matches?setDrawer(false):setCollapsed(!collapsed));
+$('#stream-switch').addEventListener('click',e=>{const b=e.target.closest('[data-stream]');if(b)setStream(b.dataset.stream)});
+(()=>{let x0=null;const sb=$('#sidebar');
+  sb.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
+  sb.addEventListener('touchend',e=>{if(x0!==null&&x0-e.changedTouches[0].clientX>60)setDrawer(false);x0=null},{passive:true});})();
+$('#scrim').addEventListener('click',()=>setDrawer(false));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')setDrawer(false);
+  if(e.key==='['&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName||'')&&!document.querySelector('dialog[open]')){e.preventDefault();toggleSide()}
+});
+drawerQuery.addEventListener('change',()=>setDrawer(false));
+window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1)).toUpperCase();if(classes[h]&&h!==classId)selectClass(h)});
+$('#day-picker').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b)return;selectedDay=Number(b.dataset.day);view='day';render()});
+$('#week-button').addEventListener('click',()=>{view='week';render()});
+$('#day-button').addEventListener('click',()=>{view='day';render()});
+$('#subject-filter').addEventListener('change',e=>{filter=e.target.value;render()});
+$('#show-breaks').addEventListener('change',render);
+$('#timetable').addEventListener('click',e=>{const b=e.target.closest('[data-subject]');if(b)openSubject(b.dataset.subject)});
+$('#lesson-dialog').addEventListener('click',e=>{
+  if(e.target===$('#lesson-dialog')){const r=e.target.getBoundingClientRect();
+    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}
+});
+mobile.addEventListener('change',e=>{if(e.matches)view='day';render()});
+
+buildNav();setStream(stream);setCollapsed(collapsed);buildFilter();updateClassInfo();render();
+setInterval(()=>{const oldDay=now.dayIndex,oldMin=now.minutes;updateLive();if(oldDay!==now.dayIndex||oldMin!==now.minutes)render()},15000);
+
+if(document.modelContext?.registerTool){
+  const lifecycle=new AbortController();
+  const tool={
+    name:'show_school_timetable',title:'Show school timetable',
+    description:'Show the weekly timetable or one school day for a class, optionally highlighting a subject. Updates the same view, class and filters as the visible controls.',
+    inputSchema:{type:'object',properties:{view:{type:'string',enum:['week','day']},classroom:{type:'string',enum:Object.keys(classes)},day:{type:'string',enum:days},subject:{type:'string',enum:['all',...Object.keys(subjects)]}},required:['view'],additionalProperties:false},
+    annotations:{readOnlyHint:false,untrustedContentHint:false},
+    execute(input){
+      if(!input||!['week','day'].includes(input.view))throw new Error('Choose week or day.');
+      if(input.classroom!==undefined&&!classes[input.classroom])throw new Error('Unknown classroom.');
+      if(input.day!==undefined&&!days.includes(input.day))throw new Error('Choose Monday to Friday.');
+      if(input.subject!==undefined&&input.subject!=='all'&&!subjects[input.subject])throw new Error('Unknown subject.');
+      if(input.classroom&&input.classroom!==classId)selectClass(input.classroom);
+      view=input.view;
+      if(input.day)selectedDay=days.indexOf(input.day);
+      if(input.subject){filter=classSubjects().includes(input.subject)?input.subject:'all';$('#subject-filter').value=filter}
+      render();
+      return {classroom:cls().name,view,day:view==='day'?days[selectedDay]:null,subject:filter,
+        lessons:view==='day'?sched()[selectedDay].filter(k=>k&&(filter==='all'||k===filter)).length:filter==='all'?totalCount():sessionCount(filter)};
+    }
+  };
+  try{Promise.resolve(document.modelContext.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{})}catch{}
+  window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
+}
+
+const themeToggle=document.getElementById('theme-toggle');
+const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8a8.5 8.5 0 1 0 11.6 11.6Z"/></svg>';
+const sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>';
+function syncThemeButton(){
+  const dark=document.documentElement.dataset.theme==='dark';
+  themeToggle.innerHTML=(dark?sun:moon)+'<span>'+(dark?'Light':'Dark')+'</span>';
+  themeToggle.setAttribute('aria-label','Switch to '+(dark?'light':'dark')+' theme');
+  themeToggle.title='Switch to '+(dark?'light':'dark')+' theme';
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',dark?'#111823':'#f5f7f7');
+}
+themeToggle.addEventListener('click',()=>{
+  const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=theme;
+  try{localStorage.setItem('schoolweek-theme',theme)}catch(e){}
+  syncThemeButton();
+});
+syncThemeButton();
+</script>
+</body>
+</html>
